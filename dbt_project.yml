@@ -1,0 +1,90 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'burstbank'
+version: '1.0.0'
+config-version: 2
+
+profile: 'burstbank'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# 1.10.5 is the first release that understands the `arguments:` form used by
+# the generic tests in models/**/*.yml.
+require-dbt-version: [">=1.10.5", "<2.0.0"]
+
+flags:
+  # dbt-trino skips TLS certificate checks by default (legacy behavior).
+  # Turning this on makes it verify Galaxy's certificate like any HTTPS
+  # client. Don't use the profile's `suppress_cert_warning` instead: it only
+  # hides the warning and leaves the connection unverified.
+  require_certificate_validation: true
+  # Read generic test parameters from `arguments:`. Without this, dbt 1.10
+  # and 1.11 treat `arguments` as a parameter name and the tests fail.
+  require_generic_test_arguments_property: true
+  warn_error_options:
+    # The layer configs below exist before every layer has models (silver
+    # arrives in checkpoint-2), which dbt would otherwise warn about.
+    silence:
+      - UnusedResourceConfigPath
+
+vars:
+  # 'postgres' = read the live CRM in Postgres through federation (default)
+  # 'seed'     = offline fallback: read seeds/*.csv, loaded by dbt build
+  crm_mode: postgres
+  # Where the live CRM tables are in Galaxy (catalog.schema). Keep in step with
+  # CRM_TABLE_PREFIX in scripts/generate_crm_data.py and the schema in
+  # scripts/load_crm_postgres.sql.
+  crm_catalog: postgresql
+  crm_schema: crm
+  # Federate vs materialize switch for the optionality moment
+  crm_bronze_materialization: view
+  # The date the CRM lookback windows are measured from. Pinned rather than
+  # current_date so results don't drift with the calendar; must match `today`
+  # in scripts/generate_crm_data.py, which the seed data is generated around.
+  as_of_date: '2026-09-29'
+
+models:
+  burstbank:
+    +database: lakehouse
+    +persist_docs:
+      relation: true
+      columns: true
+    bronze:
+      # The core-banking stg_* models are materialized views: Starburst stores
+      # each result and dbt refreshes it on every run, so downstream models
+      # don't recompute from sample.burstbank on every query. The CRM models
+      # set their own materialization (a plain view by default) so they keep
+      # reading Postgres live.
+      +materialized: materialized_view
+      +schema: burstbank_bronze
+      +tags: ["bronze"]
+    silver:
+      +materialized: table
+      +schema: burstbank_silver
+      +tags: ["silver"]
+    gold:
+      +materialized: table
+      +schema: burstbank_gold
+      +tags: ["gold"]
+
+seeds:
+  burstbank:
+    +schema: burstbank_crm_seed
+    # The seeds are only the offline fallback for the live CRM, so only load
+    # them in seed mode; otherwise dbt build would copy them on every run.
+    # The vars block above isn't visible while dbt_project.yml itself is being
+    # read (only --vars from the command line is), so this lookup carries its
+    # own default, which must match crm_mode above.
+    +enabled: "{{ var('crm_mode', 'postgres') == 'seed' }}"
