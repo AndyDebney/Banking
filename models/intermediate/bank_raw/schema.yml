@@ -1,0 +1,88 @@
+version: 2
+
+models:
+  - name: int_bank_raw__account
+    columns:
+      - name: acctkey
+        data_tests:
+          - not_null
+          - unique
+      - name: custkey
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__auto_loan_payment
+    columns:
+      - name: auto_loan_id
+        data_tests:
+          - not_null
+      - name: payment_date
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__credit_card_payment
+    columns:
+      - name: cc_number
+        data_tests:
+          - not_null
+      - name: payment_date
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__customer
+    columns:
+      - name: custkey
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_bank_raw__customer_profile
+    columns:
+      - name: profilekey
+        data_tests:
+          - not_null
+          - unique
+      - name: custkey
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__employee
+    columns:
+      - name: employee_id
+        data_tests:
+          - not_null
+          - unique
+      - name: has_future_start_date
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+  - name: int_bank_raw__mortgage_payment
+    columns:
+      - name: mortgage_id
+        data_tests:
+          - not_null
+      - name: payment_date
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__product_profile
+    columns:
+      - name: profilekey
+        data_tests:
+          - not_null
+          - unique
+      - name: custkey
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__state_census
+    columns:
+      - name: state_code
+        data_tests:
+          - unique
+      - name: state_name
+        data_tests:
+          - not_null
