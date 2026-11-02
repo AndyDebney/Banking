@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: int_bank_raw__customer_360
+    columns:
+      - name: custkey
+        data_tests:
+          - not_null
+          - unique
+      - name: acctkey
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_bank_raw__account_products
+    columns:
+      - name: custkey
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_bank_raw__customer_360')
+                field: custkey
+      - name: acctkey
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('int_bank_raw__customer_360')
+                field: acctkey
+      - name: product_type
+        data_tests:
+          - not_null
+      - name: product_identifier
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__payments
+    columns:
+      - name: custkey
+        data_tests:
+          - not_null
+      - name: acctkey
+        data_tests:
+          - not_null
+      - name: product_type
+        data_tests:
+          - not_null
+      - name: product_identifier
+        data_tests:
+          - not_null
+      - name: payment_date
+        data_tests:
+          - not_null
+
+  - name: int_bank_raw__employees
+    columns:
+      - name: employee_id
+        data_tests:
+          - not_null
+          - unique
+      - name: has_future_start_date
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
