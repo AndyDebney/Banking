@@ -19,12 +19,28 @@ queries:
       average_estimated_income: currency
   acquisition:
     sql: |
-      SELECT DATE_TRUNC('month', registration_date)::DATE AS registration_month,
-             COUNT(*) AS new_customers
-      FROM DBT_ADEBNEY.DIM_BANK_RAW__CUSTOMER
-      WHERE {{ filter('customer_segment', segment) }}
-        AND {{ filter('state_code', state) }}
-      GROUP BY 1 ORDER BY 1
+      WITH monthly AS (
+        SELECT DATE_TRUNC('month', registration_date)::DATE AS registration_month,
+               COUNT(*) AS new_customers
+        FROM DBT_ADEBNEY.DIM_BANK_RAW__CUSTOMER
+        WHERE {{ filter('customer_segment', segment) }}
+          AND {{ filter('state_code', state) }}
+        GROUP BY 1
+      ), bounds AS (
+        SELECT MIN(registration_month) AS first_month,
+               MAX(registration_month) AS last_month FROM monthly
+      ), calendar AS (
+        SELECT DATEADD(month, ROW_NUMBER() OVER (ORDER BY SEQ4()) - 1,
+                       bounds.first_month)::DATE AS registration_month,
+               bounds.last_month
+        FROM bounds, TABLE(GENERATOR(ROWCOUNT => 300))
+      )
+      SELECT calendar.registration_month,
+             COALESCE(monthly.new_customers, 0) AS new_customers
+      FROM calendar
+      LEFT JOIN monthly ON calendar.registration_month = monthly.registration_month
+      WHERE calendar.registration_month <= calendar.last_month
+      ORDER BY 1
   segments:
     sql: |
       SELECT COALESCE(customer_segment, 'Unspecified') AS customer_segment,
