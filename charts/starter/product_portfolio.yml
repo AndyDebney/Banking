@@ -1,0 +1,85 @@
+title: Product Portfolio
+source: bank_demo
+notes: Counts and recorded balances of account-product rows; balances are not a dated snapshot.
+variables:
+  product:
+    column: DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS.PRODUCT_TYPE
+  status:
+    column: DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS.PRODUCT_STATUS
+queries:
+  headline:
+    sql: |
+      SELECT COUNT(*) AS products,
+             SUM(current_balance) AS recorded_balance,
+             SUM(CASE WHEN is_in_default THEN current_balance ELSE 0 END) AS default_flagged_balance
+      FROM DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS
+      WHERE {{ filter('product_type', product) }}
+        AND {{ filter('product_status', status) }}
+    formats:
+      recorded_balance: currency
+      default_flagged_balance: currency
+  balances:
+    sql: |
+      SELECT REPLACE(INITCAP(REPLACE(product_type, '_', ' ')), 'Card', 'card') AS product,
+             SUM(current_balance) AS recorded_balance
+      FROM DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS
+      WHERE {{ filter('product_type', product) }}
+        AND {{ filter('product_status', status) }}
+      GROUP BY 1 ORDER BY 2 DESC
+    formats:
+      recorded_balance: currency
+  statuses:
+    sql: |
+      SELECT product_status, COUNT(*) AS products
+      FROM DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS
+      WHERE {{ filter('product_type', product) }}
+        AND {{ filter('product_status', status) }}
+      GROUP BY 1 ORDER BY 2 DESC
+  originations:
+    sql: |
+      SELECT DATE_TRUNC('month', product_open_date)::DATE AS opening_month,
+             COUNT(*) AS products_opened
+      FROM DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS
+      WHERE {{ filter('product_type', product) }}
+        AND {{ filter('product_status', status) }}
+        AND product_open_date IS NOT NULL
+      GROUP BY 1 ORDER BY 1
+charts:
+  products:
+    type: kpi
+    query: headline
+    value: products
+    label: Account products
+  balance:
+    type: kpi
+    query: headline
+    value: recorded_balance
+    label: Recorded balance
+  default_balance:
+    type: kpi
+    query: headline
+    value: default_flagged_balance
+    label: Default-flagged balance
+  balances:
+    type: bar
+    query: balances
+    title: Recorded balance by product
+    x: product
+    y: recorded_balance
+  statuses:
+    type: bar
+    query: statuses
+    title: Account products by status
+    x: product_status
+    y: products
+  originations:
+    type: line
+    query: originations
+    title: Product opening dates by month
+    subtitle: Counts reflect all currently recorded products, including closed ones.
+    x: opening_month
+    y: products_opened
+rows:
+  - cols: [products, balance, default_balance]
+  - cols: [balances, statuses]
+  - originations
