@@ -37,13 +37,29 @@ queries:
       GROUP BY 1 ORDER BY 2 DESC
   originations:
     sql: |
-      SELECT DATE_TRUNC('month', product_open_date)::DATE AS opening_month,
-             COUNT(*) AS products_opened
-      FROM DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS
-      WHERE {{ filter('product_type', product) }}
-        AND {{ filter('product_status', status) }}
-        AND product_open_date IS NOT NULL
-      GROUP BY 1 ORDER BY 1
+      WITH monthly AS (
+        SELECT DATE_TRUNC('month', product_open_date)::DATE AS opening_month,
+               COUNT(*) AS products_opened
+        FROM DBT_ADEBNEY.INT_BANK_RAW__ACCOUNT_PRODUCTS
+        WHERE {{ filter('product_type', product) }}
+          AND {{ filter('product_status', status) }}
+          AND product_open_date IS NOT NULL
+        GROUP BY 1
+      ), bounds AS (
+        SELECT MIN(opening_month) AS first_month,
+               MAX(opening_month) AS last_month FROM monthly
+      ), calendar AS (
+        SELECT DATEADD(month, ROW_NUMBER() OVER (ORDER BY SEQ4()) - 1,
+                       bounds.first_month)::DATE AS opening_month,
+               bounds.last_month
+        FROM bounds, TABLE(GENERATOR(ROWCOUNT => 300))
+      )
+      SELECT calendar.opening_month,
+             COALESCE(monthly.products_opened, 0) AS products_opened
+      FROM calendar
+      LEFT JOIN monthly ON calendar.opening_month = monthly.opening_month
+      WHERE calendar.opening_month <= calendar.last_month
+      ORDER BY 1
 charts:
   products:
     type: kpi
