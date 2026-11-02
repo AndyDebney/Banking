@@ -1,6 +1,6 @@
 title: Payments Overview
 source: bank_demo
-notes: Payment activity is measured per payment row using payment date. Delinquency is the share of payment rows flagged delinquent.
+notes: Payment activity is measured per payment row using payment date. Payment type means product type (auto loan, credit card, or mortgage). Status is derived only from the delinquency flag; "Not flagged delinquent" is not a processing or settlement status.
 variables:
   product:
     column: DBT_ADEBNEY.FCT_BANK_RAW__PAYMENTS.PRODUCT_TYPE
@@ -49,6 +49,35 @@ queries:
     formats:
       amount_paid: currency
       delinquent_payment_rate: percent
+  by_type_status:
+    sql: |
+      SELECT REPLACE(INITCAP(REPLACE(product_type, '_', ' ')), 'Card', 'card') AS payment_type,
+             CASE WHEN is_delinquent_payment = TRUE THEN 'Delinquent'
+                  WHEN is_delinquent_payment = FALSE THEN 'Not flagged delinquent'
+                  ELSE 'Unknown' END AS delinquency_status,
+             COUNT(*) AS payments,
+             SUM(payment_amount) AS amount_paid
+      FROM DBT_ADEBNEY.FCT_BANK_RAW__PAYMENTS
+      WHERE {{ filter('product_type', product) }}
+        AND {{ filter_date_range('payment_date', period) }}
+      GROUP BY 1, 2
+      ORDER BY 1, 2
+    formats:
+      amount_paid: currency
+  by_status:
+    sql: |
+      SELECT CASE WHEN is_delinquent_payment = TRUE THEN 'Delinquent'
+                  WHEN is_delinquent_payment = FALSE THEN 'Not flagged delinquent'
+                  ELSE 'Unknown' END AS delinquency_status,
+             COUNT(*) AS payments,
+             SUM(payment_amount) AS amount_paid
+      FROM DBT_ADEBNEY.FCT_BANK_RAW__PAYMENTS
+      WHERE {{ filter('product_type', product) }}
+        AND {{ filter_date_range('payment_date', period) }}
+      GROUP BY 1
+      ORDER BY 1
+    formats:
+      amount_paid: currency
 charts:
   payments:
     type: kpi
@@ -98,8 +127,32 @@ charts:
     type: table
     query: by_product
     title: Payments by product
+  type_status_payments:
+    type: bar
+    query: by_type_status
+    title: Payments by type and delinquency status
+    x: payment_type
+    y: payments
+    color: delinquency_status
+  type_status_amount:
+    type: bar
+    query: by_type_status
+    title: Amount paid by type and delinquency status
+    x: payment_type
+    y: amount_paid
+    color: delinquency_status
+  status_details:
+    type: table
+    query: by_status
+    title: Delinquency status totals
+  type_status_details:
+    type: table
+    query: by_type_status
+    title: Payment type and delinquency status details
 rows:
   - cols: [payments, amount, customers, delinquent]
+  - cols: [type_status_payments, type_status_amount]
+  - cols: [status_details, type_status_details]
   - cols: [monthly_amount, monthly_payments]
   - cols: [monthly_delinquency, product_mix]
   - product_details
