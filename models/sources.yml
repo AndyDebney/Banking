@@ -5,21 +5,3 @@ sources:
     database: ADEBNEYDEMODB
     schema: BANK_RAW
     tables:
-      - name: account
-        identifier: ACCOUNT
-      - name: auto_loan_payment
-        identifier: AUTO_LOAN_PAYMENT
-      - name: credit_card_payment
-        identifier: CREDIT_CARD_PAYMENT
-      - name: customer
-        identifier: CUSTOMER
-      - name: customer_profile
-        identifier: CUSTOMER_PROFILE
-      - name: employee
-        identifier: EMPLOYEE
-      - name: mortgage_payment
-        identifier: MORTGAGE_PAYMENT
-      - name: product_profile
-        identifier: PRODUCT_PROFILE
-      - name: state_census
-        identifier: STATE_CENSUS
