@@ -52,12 +52,6 @@ models:
         data_tests:
           - not_null
           - unique
-      - name: has_future_start_date
-        data_tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: [true, false]
 
   - name: int_bank_raw__mortgage_payment
     columns:
@@ -80,9 +74,9 @@ models:
 
   - name: int_bank_raw__state_census
     columns:
-      - name: state_code
+      - name: abbreviation
         data_tests:
           - unique
-      - name: state_name
+      - name: name
         data_tests:
           - not_null
