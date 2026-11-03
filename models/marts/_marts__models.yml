@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: One row per customer with profile, product, and account attributes denormalized from the banking intermediate layer.
+    columns:
+      - name: customer_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: fct_payments
+    description: One row per payment event across credit card, mortgage, and auto loan products.
+    columns:
+      - name: payment_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'mortgage', 'auto_loan']
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
+      - name: account_id
+        data_tests:
+          - not_null
+      - name: payment_reference_id
+        data_tests:
+          - not_null
+      - name: payment_date
+        data_tests:
+          - not_null
+      - name: payment_amount
+        data_tests:
+          - not_null
