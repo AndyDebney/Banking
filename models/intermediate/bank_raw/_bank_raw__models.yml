@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: int_bank_raw__account
+    description: 1:1 intermediate model for `stg_bank_raw__account`.
+
+  - name: int_bank_raw__auto_loan_payment
+    description: 1:1 intermediate model for `stg_bank_raw__auto_loan_payment`.
+
+  - name: int_bank_raw__credit_card_payment
+    description: 1:1 intermediate model for `stg_bank_raw__credit_card_payment`.
+
+  - name: int_bank_raw__customer
+    description: 1:1 intermediate model for `stg_bank_raw__customer`.
+
+  - name: int_bank_raw__customer_profile
+    description: 1:1 intermediate model for `stg_bank_raw__customer_profile`.
+
+  - name: int_bank_raw__employee
+    description: 1:1 intermediate model for `stg_bank_raw__employee`.
+
+  - name: int_bank_raw__mortgage_payment
+    description: 1:1 intermediate model for `stg_bank_raw__mortgage_payment`.
+
+  - name: int_bank_raw__product_profile
+    description: 1:1 intermediate model for `stg_bank_raw__product_profile`.
+
+  - name: int_bank_raw__state_census
+    description: 1:1 intermediate model for `stg_bank_raw__state_census`.
