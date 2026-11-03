@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: stg_bank_raw__account
+    description: 1:1 staging model for the `bank_raw.account` source.
+    columns:
+      - name: acctkey
+        data_tests:
+          - not_null
+          - unique
+      - name: custkey
+        data_tests:
+          - not_null
+
+  - name: stg_bank_raw__auto_loan_payment
+    description: 1:1 staging model for the `bank_raw.auto_loan_payment` source.
+    columns:
+      - name: auto_loan_id
+        data_tests:
+          - not_null
+
+  - name: stg_bank_raw__credit_card_payment
+    description: 1:1 staging model for the `bank_raw.credit_card_payment` source.
+    columns:
+      - name: cc_number
+        data_tests:
+          - not_null
+
+  - name: stg_bank_raw__customer
+    description: 1:1 staging model for the `bank_raw.customer` source.
+    columns:
+      - name: custkey
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_bank_raw__customer_profile
+    description: 1:1 staging model for the `bank_raw.customer_profile` source.
+    columns:
+      - name: profilekey
+        data_tests:
+          - not_null
+          - unique
+      - name: custkey
+        data_tests:
+          - not_null
+
+  - name: stg_bank_raw__employee
+    description: 1:1 staging model for the `bank_raw.employee` source.
+    columns:
+      - name: employee_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_bank_raw__mortgage_payment
+    description: 1:1 staging model for the `bank_raw.mortgage_payment` source.
+    columns:
+      - name: mortgage_id
+        data_tests:
+          - not_null
+
+  - name: stg_bank_raw__product_profile
+    description: 1:1 staging model for the `bank_raw.product_profile` source.
+    columns:
+      - name: profilekey
+        data_tests:
+          - not_null
+          - unique
+      - name: custkey
+        data_tests:
+          - not_null
+
+  - name: stg_bank_raw__state_census
+    description: 1:1 staging model for the `bank_raw.state_census` source.
